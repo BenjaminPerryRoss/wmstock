@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.fail;
 public class GeodeConnectorTest {
 
     private static GeodeConnector connector;
-    private WMLogger logger = new WMLogger();
     @BeforeClass
     public static void before () {
         try {

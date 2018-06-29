@@ -14,7 +14,6 @@ import java.util.Map;
 public class UpdateData implements Function {
 
     public static final String ID = UpdateData.class.getSimpleName();
-    public WMLogger logger = new WMLogger();
 
     @Override
     public String getId() {
