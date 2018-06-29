@@ -1,8 +1,10 @@
 package wmstock;
 
+import org.apache.geode.cache.execute.ResultCollector;
 import org.junit.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -11,6 +13,7 @@ import static org.assertj.core.api.Assertions.fail;
 public class GeodeConnectorTest {
 
     private static GeodeConnector connector;
+    private WMLogger logger = new WMLogger();
     @BeforeClass
     public static void before () {
         try {
@@ -50,22 +53,22 @@ public class GeodeConnectorTest {
 
         Item myVal = connector.getItem(4);
 
-        assertThat(myVal).isEqualTo(item);
+        assertThat(myVal.equals(item));
 
         Item wrongVal = connector.getItem(5);
 
-        assertThat(wrongVal).isNotEqualTo(item);
+        assertThat(wrongVal == null);
     }
 
     @Test
     public void refreshTest() {
-        connector.refresh();
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        ResultCollector rc = connector.refresh();
+        assertThat(((ArrayList)rc.getResult()).get(0)).isEqualTo("Success!");
 
+        Item myVal = connector.getItem(0);
+        Item expectedVal = new Item("Item0", 0);
+
+        assertThat(myVal.equals(expectedVal));
     }
 
 }

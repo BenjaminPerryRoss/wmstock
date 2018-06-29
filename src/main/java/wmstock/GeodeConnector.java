@@ -135,7 +135,7 @@ public class GeodeConnector {
         }
     }
 
-    public void refresh() {
-        execution.execute(UpdateData.ID);
+    public ResultCollector refresh() {
+        return execution.execute(UpdateData.ID);
     }
 }

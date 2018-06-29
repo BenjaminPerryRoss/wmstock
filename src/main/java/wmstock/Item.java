@@ -12,6 +12,12 @@ public class Item implements Serializable {
         quantity = q;
     }
 
+    @Override
+    public boolean equals(Object o) {
+
+        return (((Item)o).getName() == name && ((Item)o).getQuantity() == quantity);
+    }
+
     public String getName()
     {
         return name;
