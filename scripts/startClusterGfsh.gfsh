@@ -5,6 +5,6 @@ start server --name=server2 --locators=127.0.0.1[10334] --server-port=0
 
 create region --if-not-exists=true --name=items --type=REPLICATE
 
-deploy --jar=build/libs/wmstock-1.0-SNAPSHOT.jar
+#deploy --jar=build/libs/wmstock-1.0-SNAPSHOT.jar
 
 list functions

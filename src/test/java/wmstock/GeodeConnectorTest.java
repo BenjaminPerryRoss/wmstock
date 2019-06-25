@@ -13,61 +13,37 @@ import static org.assertj.core.api.Assertions.fail;
 public class GeodeConnectorTest {
 
     private static GeodeConnector connector;
-    @BeforeClass
-    public static void before () {
+
+    @Test
+    public void initConnector () throws IOException, InterruptedException {
         try {
             connector = new GeodeConnector();
             connector.connect();
+
         } catch (Exception e) {
             fail("Exception thrown during Connector initialization: " + e.getMessage());
         }
-    }
+        Item item;
+        for (int i = 0; i < 2; ++i){
+            if (i == 0) {
+                item = new ItemV1("string", 1, false);
+            }
+            else {
+                item = new ItemV2("string", 2, 42);
+            }
+            connector.putItem(i, item);
+            connector.removeItem(i);
+        }
 
-    @AfterClass
-    public static void after() {
+        Item item3 = new ItemV3("string", 3, "string-two");
+        connector.putItem(2,item3);
+
+        System.out.println(((ItemV3) connector.getItem(2)).string);
+
         try {
             connector.disconnect();
         } catch (Exception e) {
             fail("Exception thrown during Connector shutdown: " + e.getMessage());
         }
     }
-
-    @Test
-    public void initConnector () throws IOException, InterruptedException {
-        assertThat(connector.isConnected()).isEqualTo(true);
-
-        connector.disconnect();
-
-        assertThat(connector.isConnected()).isEqualTo(false);
-
-        connector.connect();
-
-        assertThat(connector.isConnected()).isEqualTo(true);
-    }
-
-    @Test
-    public void putToAndGetFromItems() {
-        Item item = new Item( "MyVal", 14);
-        connector.putItem(4, item);
-
-        Item myVal = connector.getItem(4);
-
-        assertThat(myVal.equals(item));
-
-        Item wrongVal = connector.getItem(5);
-
-        assertThat(wrongVal == null);
-    }
-
-    @Test
-    public void refreshTest() {
-        ResultCollector rc = connector.refresh();
-        assertThat(((ArrayList)rc.getResult()).get(0)).isEqualTo("Success!");
-
-        Item myVal = connector.getItem(0);
-        Item expectedVal = new Item("Item0", 0);
-
-        assertThat(myVal.equals(expectedVal));
-    }
-
 }

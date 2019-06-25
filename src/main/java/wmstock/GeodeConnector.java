@@ -33,8 +33,6 @@ public class GeodeConnector {
                 .set("log-level", "WARN").create();
         createRegion(itemsRegionName);
 
-        UpdateData myFun = new UpdateData();
-        FunctionService.registerFunction(myFun);
 
         execution = FunctionService.onRegion(itemsRegion);
 
@@ -103,6 +101,8 @@ public class GeodeConnector {
         itemsRegion.put(key, value);
     }
 
+    public void removeItem(int key) {itemsRegion.destroy(key);}
+
     public void disconnect() throws IOException, InterruptedException {
         if(isConnected)
         {
@@ -133,9 +133,5 @@ public class GeodeConnector {
 
             isConnected = false;
         }
-    }
-
-    public ResultCollector refresh() {
-        return execution.execute(UpdateData.ID);
     }
 }
