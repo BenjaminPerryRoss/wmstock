@@ -1,10 +1,13 @@
 package wmstock;
 
-import org.apache.geode.cache.execute.ResultCollector;
+import org.apache.geode.cache.client.Pool;
+import org.apache.geode.cache.client.PoolManager;
+import org.apache.geode.cache.execute.FunctionService;
+import org.apache.geode.pdx.internal.PdxType;
+
 import org.junit.*;
 
-import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -13,9 +16,12 @@ import static org.assertj.core.api.Assertions.fail;
 public class GeodeConnectorTest {
 
     private static GeodeConnector connector;
+    private static final int ENTRY_COUNT = 1000000;
+    private static final int PDX_TYPE_COUNT = 50;
 
     @Test
-    public void initConnector () throws IOException, InterruptedException {
+    public void pdxTest()
+        throws NoSuchFieldException, IllegalAccessException {
         try {
             connector = new GeodeConnector();
             connector.connect();
@@ -23,22 +29,43 @@ public class GeodeConnectorTest {
         } catch (Exception e) {
             fail("Exception thrown during Connector initialization: " + e.getMessage());
         }
-        Item item;
-        for (int i = 0; i < 2; ++i){
-            if (i == 0) {
-                item = new ItemV1("string", 1, false);
-            }
-            else {
-                item = new ItemV2("string", 2, 42);
-            }
-            connector.putItem(i, item);
-            connector.removeItem(i);
+
+        for (int i = 0; i < PDX_TYPE_COUNT - 1; ++i){
+            connector.createPdxType("ItemV"+i);
         }
 
-        Item item3 = new ItemV3("string", 3, "string-two");
-        connector.putItem(2,item3);
+        for(int i = 0; i < ENTRY_COUNT; i++) {
+            Item item3 = new ItemV3("Entry" + i, i, "string" + i);
+            connector.putItem(i, item3);
+            if ((i % 100000 == 0) && i != 0) {
+                System.out.println("Finished putting " + i + " entries");
+            }
+        }
 
-        System.out.println(((ItemV3) connector.getItem(2)).string);
+        List<PdxType> pdxTypes = connector.getLocalPdxTypes();
+
+        //assertThat(((ItemV3)connector.getItem(2)).string).isEqualTo("string-two");
+
+        for (PdxType type : pdxTypes) {
+            System.out.println(type.getClassName());
+        }
+
+        connector.restartClient();
+
+        Long startTime = System.currentTimeMillis();
+
+        connector.checkUnusedTypes();
+
+        List<Integer> pdxTypeIds = connector.getLocalPdxTypeIds();
+        Pool pool = (Pool) PoolManager.getAll().values().toArray()[0];
+        List<String> completedFunctionResult = (List) FunctionService
+            .onServer(pool).withArgs(new Object[]{true, pdxTypeIds}).execute("UnusedPdxTypeFunction").getResult();
+
+        System.out.println("Result = " + completedFunctionResult.get(0));
+
+        Long endTime = System.currentTimeMillis();
+
+        System.out.println("Process of identifying unused pdxTypes took " + (endTime - startTime)/1000 + " seconds for " + ENTRY_COUNT + " entries and " + PDX_TYPE_COUNT + " pdx types.");
 
         try {
             connector.disconnect();

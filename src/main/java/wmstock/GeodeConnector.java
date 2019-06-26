@@ -7,11 +7,20 @@ import org.apache.geode.cache.client.ClientRegionShortcut;
 import org.apache.geode.cache.execute.Execution;
 import org.apache.geode.cache.execute.FunctionService;
 import org.apache.geode.cache.execute.ResultCollector;
+import org.apache.geode.internal.cache.GemFireCacheImpl;
+import org.apache.geode.pdx.PdxInstanceFactory;
+import org.apache.geode.pdx.internal.PdxType;
+import org.apache.geode.pdx.internal.TypeRegistry;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class GeodeConnector {
@@ -85,7 +94,7 @@ public class GeodeConnector {
 
         if(itemsRegion == null) { return false;}
 
-        System.out.print("Region " + newRegionName + " Created.");
+        System.out.println("Region " + newRegionName + " Created.");
         return true;
     }
 
@@ -133,5 +142,49 @@ public class GeodeConnector {
 
             isConnected = false;
         }
+    }
+
+    public List<PdxType> getLocalPdxTypes() throws NoSuchFieldException, IllegalAccessException {
+        TypeRegistry pdxRegistry = ((GemFireCacheImpl) clientCache).getPdxRegistry();
+        Field field = pdxRegistry.getClass().getDeclaredField("idToType");
+        field.setAccessible(true);
+        Map idToType = (Map)field.get(pdxRegistry);
+        return new ArrayList(idToType.values());
+    }
+
+    public List<Integer> getLocalPdxTypeIds() throws NoSuchFieldException, IllegalAccessException {
+        TypeRegistry pdxRegistry = ((GemFireCacheImpl) clientCache).getPdxRegistry();
+        Field field = pdxRegistry.getClass().getDeclaredField("idToType");
+        field.setAccessible(true);
+        Map idToType = (Map)field.get(pdxRegistry);
+        return new ArrayList(idToType.keySet());
+    }
+
+    public void restartClient() {
+        clientCache.close();
+
+        clientCache = new ClientCacheFactory().addPoolLocator("127.0.0.1", 10334)
+            .set("log-level", "WARN").create();
+
+        createRegion(itemsRegionName);
+
+        System.out.println("Restarted client successfully");
+    }
+
+    public void checkUnusedTypes() {
+        Set<Integer> keySetOnServer = itemsRegion.keySetOnServer();
+        Iterator entryKeys = keySetOnServer.iterator();
+
+        while(entryKeys.hasNext()) {
+            Object key = entryKeys.next();
+            Object o = itemsRegion.get(key);
+            if (o != null) {
+                o.hashCode();
+            }
+        }
+    }
+
+    public void createPdxType(String instanceName) {
+        clientCache.createPdxInstanceFactory(instanceName).create();
     }
 }

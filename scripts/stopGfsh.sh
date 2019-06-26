@@ -6,3 +6,5 @@ echo $PATH
 
 gfsh -e "run --file=scripts/stopClusterGfsh.gfsh"
 
+rm -rf server* locator*
+

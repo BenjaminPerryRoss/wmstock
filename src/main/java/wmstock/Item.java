@@ -2,7 +2,11 @@ package wmstock;
 
 import java.io.Serializable;
 
-public class Item implements Serializable {
+import org.apache.geode.pdx.PdxReader;
+import org.apache.geode.pdx.PdxSerializable;
+import org.apache.geode.pdx.PdxWriter;
+
+public class Item implements PdxSerializable {
     private String name;
     private int quantity;
 
@@ -38,6 +42,16 @@ public class Item implements Serializable {
 
     public void setQuantity(int quantity){
         this.quantity = quantity;
+    }
+
+    @Override
+    public void toData(PdxWriter writer) {
+
+    }
+
+    @Override
+    public void fromData(PdxReader reader) {
+
     }
 }
 
