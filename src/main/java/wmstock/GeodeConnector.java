@@ -94,7 +94,7 @@ public class GeodeConnector {
 
         if(itemsRegion == null) { return false;}
 
-        System.out.println("Region " + newRegionName + " Created.");
+        System.out.println("Region \"" + newRegionName + "\" Created.");
         return true;
     }
 
@@ -171,16 +171,16 @@ public class GeodeConnector {
         System.out.println("Restarted client successfully");
     }
 
-    public void checkUnusedTypes() {
+    public void populateClientPDXTypesFromRegionEntries() {
         Set<Integer> keySetOnServer = itemsRegion.keySetOnServer();
         Iterator entryKeys = keySetOnServer.iterator();
 
         while(entryKeys.hasNext()) {
             Object key = entryKeys.next();
             Object o = itemsRegion.get(key);
-            if (o != null) {
-                o.hashCode();
-            }
+//            if (o != null) {
+//                o.hashCode();
+//            }
         }
     }
 
