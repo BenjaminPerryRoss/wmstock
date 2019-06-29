@@ -48,11 +48,9 @@ public class GeodeConnectorTest {
 
         List<PdxType> pdxTypes = connector.getLocalPdxTypes();
 
-        //assertThat(((ItemV3)connector.getItem(2)).string).isEqualTo("string-two");
-
-        for (PdxType type : pdxTypes) {
-            System.out.println("Type ID " + type.getTypeId() + ": " + type.getClassName());
-        }
+//        for (PdxType type : pdxTypes) {
+//            System.out.println("Type ID " + type.getTypeId() + ": " + type.getClassName());
+//        }
 
 //        connector.restartClient();
 
@@ -75,20 +73,22 @@ public class GeodeConnectorTest {
 
         System.out.println("Process of identifying unused pdxTypes took " + (endTime - startTime)/1000 + " seconds for " + ENTRY_COUNT + " entries and " + PDX_TYPE_COUNT + " pdx types.");
 
-        List<Integer> pdxTypeIdsToRemove = new ArrayList<>();
+        List<PdxType> pdxTypesToRemove = new ArrayList<>();
 
         PdxType typeToRemove = pdxTypes.get(0);
 
-        System.out.println("PDXType to remove = " + typeToRemove.getClassName());
+        System.out.println("PDXType to remove = " + typeToRemove.getTypeId());
 
-        pdxTypeIdsToRemove.add(typeToRemove.getTypeId());
+        pdxTypesToRemove.add(typeToRemove);
 
-        completedFunctionResult = (List) FunctionService.onServer(pool).withArgs(new Object[]{true, pdxTypeIdsToRemove}).execute("RemovePDXTypesByKeyFunction").getResult();
-        if (completedFunctionResult.get(0) instanceof Throwable) {
-            System.out.println(((Exception)completedFunctionResult.get(0)).getMessage());
-        }
-        else {
-            System.out.println(completedFunctionResult.get(0));
+        completedFunctionResult = (List) FunctionService.onServers(pool).withArgs(new Object[]{true, pdxTypesToRemove}).execute("RemovePDXTypesByKeyFunction").getResult();
+//        completedFunctionResult = (List) FunctionService.onServer(pool).withArgs(new Object[]{true, pdxTypesToRemove}).execute("RemovePDXTypesByKeyFunction").getResult();
+        for (Object result : completedFunctionResult) {
+            if (result instanceof Throwable) {
+                System.out.println(((Exception) result).getMessage());
+            } else {
+                System.out.println(result);
+            }
         }
 //        completedFunctionResult = (List) FunctionService
 //                .onServer(pool).withArgs(new Object[]{true, localPdxTypeIds}).execute("UnusedPdxTypeFunction").getResult();

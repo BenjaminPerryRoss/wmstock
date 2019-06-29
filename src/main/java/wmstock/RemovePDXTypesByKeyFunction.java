@@ -6,6 +6,7 @@ import org.apache.geode.cache.Region;
 import org.apache.geode.cache.execute.Function;
 import org.apache.geode.cache.execute.FunctionContext;
 import org.apache.geode.internal.cache.GemFireCacheImpl;
+import org.apache.geode.pdx.internal.PdxType;
 import org.apache.geode.pdx.internal.TypeRegistry;
 
 import java.util.Collection;
@@ -26,15 +27,26 @@ public class RemovePDXTypesByKeyFunction implements Function {
 
         try {
             Object[] arguments = (Object[])((Object[])context.getArguments());
-            Collection<Integer> pdxTypeIdsToRemove = (Collection)arguments[1];
+//            Collection<Integer> pdxTypeIdsToRemove = (Collection)arguments[1];
+            Collection<PdxType> pdxTypeIdsToRemove = (Collection)arguments[1];
             Cache cache = CacheFactory.getAnyInstance();
             TypeRegistry registry = ((GemFireCacheImpl)cache).getPdxRegistry();
-            for (int id : pdxTypeIdsToRemove) {
-                registry.removeType(id);
-                stringBuilder.append("Removed PDXType with ID: " + id + "\n");
+            for (PdxType type : pdxTypeIdsToRemove) {
+                if (registry.getTypeRegistration().types().containsValue(type)) {
+                    registry.removeType(type);
+                    stringBuilder.append("Removed PDXType " + type + " from Member "
+                            + context.getMemberName() + "\n");
+                }
+                else {
+                    stringBuilder.append("PDXType with ID: " + type.getTypeId() + " not present on Member "
+                            + context.getMemberName() + "\n");
+                }
             }
         } catch (Exception ex) {
-            context.getResultSender().sendException(ex);
+            Object[] arguments = (Object[])((Object[])context.getArguments());
+            Collection<PdxType> types = (Collection)arguments[1];
+            context.getResultSender().lastResult("Caught Exception " + ex + " while trying to remove PDXType "
+                    + ((PdxType)types.toArray()[0]).getClassName() + " on Member " + context.getMemberName());
         }
         stringBuilder.append("Finished removing types");
         context.getResultSender().lastResult(stringBuilder.toString());
