@@ -32,7 +32,7 @@ public class RemovePDXTypesByKeyFunction implements Function {
             Cache cache = CacheFactory.getAnyInstance();
             TypeRegistry registry = ((GemFireCacheImpl)cache).getPdxRegistry();
             for (PdxType type : pdxTypeIdsToRemove) {
-                if (registry.getTypeRegistration().types().containsValue(type)) {
+                if (true /*registry.typeMap().containsValue(type)*/) {
                     registry.removeType(type);
                     stringBuilder.append("Removed PDXType " + type + " from Member "
                             + context.getMemberName() + "\n");
@@ -45,10 +45,12 @@ public class RemovePDXTypesByKeyFunction implements Function {
         } catch (Exception ex) {
             Object[] arguments = (Object[])((Object[])context.getArguments());
             Collection<PdxType> types = (Collection)arguments[1];
-            context.getResultSender().lastResult("Caught Exception " + ex + " while trying to remove PDXType "
-                    + ((PdxType)types.toArray()[0]).getClassName() + " on Member " + context.getMemberName());
+            stringBuilder.append("Caught Exception " + ex + " while trying to remove PDXType "
+                    + ((PdxType)types.toArray()[0]).getClassName() + " on Member " + context.getMemberName() + "\n");
+//            context.getResultSender().lastResult("Caught Exception " + ex + " while trying to remove PDXType "
+//                    + ((PdxType)types.toArray()[0]).getClassName() + " on Member " + context.getMemberName());
         }
-        stringBuilder.append("Finished removing types");
+        stringBuilder.append("Finished removing types on member "+ context.getMemberName());
         context.getResultSender().lastResult(stringBuilder.toString());
     }
 

@@ -19,7 +19,7 @@ public class GeodeConnectorTest {
 
     private static GeodeConnector connector;
     private static final int ENTRY_COUNT = 10000;
-    private static final int PDX_TYPE_COUNT = 50;
+    private static final int PDX_TYPE_COUNT = 1;
 
     @Test
     public void pdxTest()
@@ -89,6 +89,11 @@ public class GeodeConnectorTest {
             } else {
                 System.out.println(result);
             }
+        }
+        try {
+            connector.getItem(0);
+        } catch (Exception ex) {
+            System.out.println("Exception getting from region: " + ex);
         }
 //        completedFunctionResult = (List) FunctionService
 //                .onServer(pool).withArgs(new Object[]{true, localPdxTypeIds}).execute("UnusedPdxTypeFunction").getResult();

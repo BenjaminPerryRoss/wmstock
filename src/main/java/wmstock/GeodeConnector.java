@@ -144,20 +144,14 @@ public class GeodeConnector {
         }
     }
 
-    public List<PdxType> getLocalPdxTypes() throws NoSuchFieldException, IllegalAccessException {
+    public List<PdxType> getLocalPdxTypes() {
         TypeRegistry pdxRegistry = ((GemFireCacheImpl) clientCache).getPdxRegistry();
-        Field field = pdxRegistry.getClass().getDeclaredField("idToType");
-        field.setAccessible(true);
-        Map idToType = (Map)field.get(pdxRegistry);
-        return new ArrayList(idToType.values());
+        return new ArrayList(pdxRegistry.typeMap().values());
     }
 
-    public List<Integer> getLocalPdxTypeIds() throws NoSuchFieldException, IllegalAccessException {
+    public List<Integer> getLocalPdxTypeIds() {
         TypeRegistry pdxRegistry = ((GemFireCacheImpl) clientCache).getPdxRegistry();
-        Field field = pdxRegistry.getClass().getDeclaredField("idToType");
-        field.setAccessible(true);
-        Map idToType = (Map)field.get(pdxRegistry);
-        return new ArrayList(idToType.keySet());
+        return new ArrayList(pdxRegistry.typeMap().keySet());
     }
 
     public void restartClient() {
