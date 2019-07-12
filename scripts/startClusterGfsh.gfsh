@@ -5,7 +5,9 @@ start server --name=server2 --locators=127.0.0.1[10334] --server-port=0
 #start server --name=server3 --locators=127.0.0.1[10334] --server-port=0
 #start server --name=server4 --locators=127.0.0.1[10334] --server-port=0
 
-create region --if-not-exists=true --name=items --type=REPLICATE
+create disk-store --name=store1 --dir=data/store1
+
+create region --if-not-exists=true --name=items --type=REPLICATE_OVERFLOW --disk-store=store1 --eviction-entry-count=1 --eviction-action=overflow-to-disk --enable-statistics=true
 
 deploy --jar=build/libs/wmstock-1.0-SNAPSHOT.jar
 

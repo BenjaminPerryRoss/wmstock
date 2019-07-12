@@ -27,26 +27,24 @@ public class RemovePDXTypesByKeyFunction implements Function {
 
         try {
             Object[] arguments = (Object[])((Object[])context.getArguments());
-//            Collection<Integer> pdxTypeIdsToRemove = (Collection)arguments[1];
-            Collection<PdxType> pdxTypeIdsToRemove = (Collection)arguments[1];
+            Collection<Integer> pdxTypeIdsToRemove = (Collection)arguments[1];
+//            Collection<PdxType> pdxTypeIdsToRemove = (Collection)arguments[1];
             Cache cache = CacheFactory.getAnyInstance();
             TypeRegistry registry = ((GemFireCacheImpl)cache).getPdxRegistry();
-            for (PdxType type : pdxTypeIdsToRemove) {
-                if (true /*registry.typeMap().containsValue(type)*/) {
-                    registry.removeType(type);
-                    stringBuilder.append("Removed PDXType " + type + " from Member "
-                            + context.getMemberName() + "\n");
-                }
-                else {
-                    stringBuilder.append("PDXType with ID: " + type.getTypeId() + " not present on Member "
-                            + context.getMemberName() + "\n");
-                }
+            for (Integer typeId : pdxTypeIdsToRemove) {
+                    registry.removeType(typeId);
+                    stringBuilder.append("Removed type with ID " + typeId + "on member " + context.getMemberName()+ "\n");
             }
         } catch (Exception ex) {
             Object[] arguments = (Object[])((Object[])context.getArguments());
-            Collection<PdxType> types = (Collection)arguments[1];
+//            Collection<PdxType> types = (Collection)arguments[1];
+            Collection<Integer> typeIds = (Collection)arguments[1];
+            StackTraceElement elements[] = ex.getStackTrace();
             stringBuilder.append("Caught Exception " + ex + " while trying to remove PDXType "
-                    + ((PdxType)types.toArray()[0]).getClassName() + " on Member " + context.getMemberName() + "\n");
+                    + typeIds.toArray()[0] + " on Member " + context.getMemberName() + "\n");
+            for (StackTraceElement element : elements) {
+                stringBuilder.append(element.toString() + "\n");
+            }
 //            context.getResultSender().lastResult("Caught Exception " + ex + " while trying to remove PDXType "
 //                    + ((PdxType)types.toArray()[0]).getClassName() + " on Member " + context.getMemberName());
         }

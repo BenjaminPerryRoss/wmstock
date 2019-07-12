@@ -18,8 +18,17 @@ import static org.assertj.core.api.Assertions.fail;
 public class GeodeConnectorTest {
 
     private static GeodeConnector connector;
-    private static final int ENTRY_COUNT = 10000;
+    private static final int ENTRY_COUNT = 10;
     private static final int PDX_TYPE_COUNT = 1;
+
+    @After
+    public void cleanup() {
+        try {
+            connector.disconnect();
+        } catch (Exception e) {
+            fail("Exception thrown during Connector shutdown: " + e.getMessage());
+        }
+    }
 
     @Test
     public void pdxTest()
@@ -44,26 +53,36 @@ public class GeodeConnectorTest {
             }
         }
 
-//        connector.putItem(ENTRY_COUNT, new ItemV2("ItemV2 name", -1, -1));
+        connector.putItem(ENTRY_COUNT, new ItemV2("ItemV2 name", -1, -1));
 
-        List<PdxType> pdxTypes = connector.getLocalPdxTypes();
+//        List<PdxType> pdxTypes = connector.getLocalPdxTypes();
 
-//        for (PdxType type : pdxTypes) {
-//            System.out.println("Type ID " + type.getTypeId() + ": " + type.getClassName());
-//        }
+        for (PdxType type : connector.getLocalPdxTypes()) {
+            System.out.println("Type ID " + type.getTypeId() + ": " + type.getClassName());
+        }
 
-//        connector.restartClient();
+        connector.restartClient();
+
+        for (PdxType type : connector.getLocalPdxTypes()) {
+            System.out.println("Type ID " + type.getTypeId() + ": " + type.getClassName());
+        }
 
         Long startTime = System.currentTimeMillis();
 
-//        connector.populateClientPDXTypesFromRegionEntries();
+        connector.populateClientPDXTypesFromRegionEntries();
+
+        for (PdxType type : connector.getLocalPdxTypes()) {
+            System.out.println("Type ID " + type.getTypeId() + ": " + type.getClassName());
+        }
 
         List<Integer> localPdxTypeIds = connector.getLocalPdxTypeIds();
 
         System.out.println("Number of local PDXTypes = " + localPdxTypeIds.size());
 
         Pool pool = (Pool) PoolManager.getAll().values().toArray()[0];
+
         List<Object> completedFunctionResult;
+
 //        completedFunctionResult = (List) FunctionService
 //            .onServer(pool).withArgs(new Object[]{true, localPdxTypeIds}).execute("UnusedPdxTypeFunction").getResult();
 //
@@ -73,37 +92,37 @@ public class GeodeConnectorTest {
 
         System.out.println("Process of identifying unused pdxTypes took " + (endTime - startTime)/1000 + " seconds for " + ENTRY_COUNT + " entries and " + PDX_TYPE_COUNT + " pdx types.");
 
-        List<PdxType> pdxTypesToRemove = new ArrayList<>();
+        List<Integer> pdxIdsToRemove = new ArrayList<>();
 
-        PdxType typeToRemove = pdxTypes.get(0);
+        int idToRemove = localPdxTypeIds.get(0);
 
-        System.out.println("PDXType to remove = " + typeToRemove.getTypeId());
+        System.out.println("PDXType to remove = " + idToRemove);
 
-        pdxTypesToRemove.add(typeToRemove);
+        pdxIdsToRemove.add(idToRemove);
 
-        completedFunctionResult = (List) FunctionService.onServers(pool).withArgs(new Object[]{true, pdxTypesToRemove}).execute("RemovePDXTypesByKeyFunction").getResult();
-//        completedFunctionResult = (List) FunctionService.onServer(pool).withArgs(new Object[]{true, pdxTypesToRemove}).execute("RemovePDXTypesByKeyFunction").getResult();
-        for (Object result : completedFunctionResult) {
-            if (result instanceof Throwable) {
-                System.out.println(((Exception) result).getMessage());
-            } else {
-                System.out.println(result);
-            }
-        }
+        connector.restartClient();
+
+        pool = (Pool) PoolManager.getAll().values().toArray()[0];
+
+//        completedFunctionResult = (List) FunctionService.onServers(pool).withArgs(new Object[]{true, pdxIdsToRemove}).execute("RemovePDXTypesByKeyFunction").getResult();
+//
+//        for (Object result : completedFunctionResult) {
+//            if (result instanceof Throwable) {
+//                System.out.println(((Exception) result).getMessage());
+//            } else {
+//                System.out.println(result);
+//            }
+//        }
+
         try {
-            connector.getItem(0);
-        } catch (Exception ex) {
-            System.out.println("Exception getting from region: " + ex);
+            ItemV2 item = (ItemV2)connector.getItem(ENTRY_COUNT);
+            System.out.println(item.integer);
+        } catch (Throwable ex) {
+            Assert.fail("Exception getting from region: " + ex);
         }
 //        completedFunctionResult = (List) FunctionService
 //                .onServer(pool).withArgs(new Object[]{true, localPdxTypeIds}).execute("UnusedPdxTypeFunction").getResult();
 //
 //        System.out.println("Result = " + completedFunctionResult.get(0));
-
-        try {
-            connector.disconnect();
-        } catch (Exception e) {
-            fail("Exception thrown during Connector shutdown: " + e.getMessage());
-        }
     }
 }
